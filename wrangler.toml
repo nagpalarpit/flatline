@@ -1,0 +1,31 @@
+name = "flatline"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "flatline-db"
+database_id = "placeholder-set-after-wrangler-d1-create"
+
+# Sweeps for overdue checks every minute — this is the primary write-heavy
+# path (see docs/fullstack/2026-08-25-flatline-v1-implementation.md for why
+# writes are concentrated here instead of on every inbound ping).
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+ENVIRONMENT = "development"
+# No secrets required for v1 — alerting is outbound webhook-only (customer
+# supplies their own URL), so there is no third-party credential dependency
+# to provision before this can run end to end, unlike email/SMS alerting.
+
+[env.staging]
+name = "flatline-staging"
+[env.staging.vars]
+ENVIRONMENT = "staging"
+
+[env.production]
+name = "flatline"
+[env.production.vars]
+ENVIRONMENT = "production"

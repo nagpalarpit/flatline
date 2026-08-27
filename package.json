@@ -1,0 +1,30 @@
+{
+  "name": "flatline",
+  "version": "0.1.0",
+  "description": "Dead man's switch for cron jobs — ping after every scheduled run, get alerted the moment it stops. Hosted on Cloudflare Workers.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:local": "wrangler d1 migrations apply flatline-db --local",
+    "db:remote": "wrangler d1 migrations apply flatline-db",
+    "staging:deploy": "wrangler deploy --env staging"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.12.0",
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.7",
+    "wrangler": "^3.99.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nagpalarpit/flatline.git"
+  }
+}
