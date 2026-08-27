@@ -2,6 +2,9 @@
 
 A dead man's switch for cron jobs and scheduled tasks. Ping it after every run; get alerted the moment it stops. Self-hosted on your own Cloudflare account.
 
+[![CI](https://github.com/nagpalarpit/flatline/actions/workflows/ci.yml/badge.svg)](https://github.com/nagpalarpit/flatline/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/nagpalarpit/flatline)
 
 This is a self-hosted product: you deploy it to your own Cloudflare account (free tier is enough to start) and it's entirely yours — your data, your checks, no third party in the request path. Alerting is outbound webhook-only, so there's no email/SMS provider to configure either.
