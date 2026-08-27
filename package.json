@@ -23,8 +23,12 @@
     "wrangler": "^3.99.0"
   },
   "license": "MIT",
+  "homepage": "https://nagpalarpit.github.io/auto-company-www/flatline/",
   "repository": {
     "type": "git",
     "url": "https://github.com/nagpalarpit/flatline.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nagpalarpit/flatline/issues"
   }
 }
