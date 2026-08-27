@@ -3,6 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Stores users, monitored checks, status history, and registration attempts.
 [[d1_databases]]
 binding = "DB"
 database_name = "flatline-db"
