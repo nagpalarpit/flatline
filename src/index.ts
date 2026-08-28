@@ -386,10 +386,37 @@ async function handlePing(c: Context<{ Bindings: Env }>) {
     await applyStatusChange(c.env.DB, row, 'up', 'down', nowIso);
   } else {
     // Common path — exactly one UPDATE, no history row.
-    await c.env.DB
-      .prepare('UPDATE checks SET last_ping_at = ?, updated_at = ? WHERE id = ?')
-      .bind(nowIso, nowIso, row.id)
+    //
+    // The interval-floor check above reads `row.last_ping_at` and computes
+    // elapsed time in JS, then this UPDATE writes unconditionally — a gap
+    // that two concurrent pings for the same check can both land in: both
+    // read the same pre-write last_ping_at, both compute an elapsed time
+    // that clears the tier floor, and both write. That defeats the floor's
+    // actual purpose (bounding Cloudflare write cost per check, see the
+    // comment atop this file), not just a display nicety. The WHERE clause
+    // re-checks the interval against whatever `last_ping_at` actually is at
+    // write time, so a second, faster-arriving concurrent ping finds the
+    // guard already failed and matches zero rows instead of silently
+    // slipping through.
+    const result = await c.env.DB
+      .prepare(
+        `UPDATE checks SET last_ping_at = ?, updated_at = ?
+         WHERE id = ?
+           AND (last_ping_at IS NULL OR datetime(last_ping_at, '+' || ? || ' seconds') <= datetime(?))`
+      )
+      .bind(nowIso, nowIso, row.id, limit.minIntervalSeconds, nowIso)
       .run();
+
+    if (result.meta.changes === 0) {
+      return c.json(
+        {
+          error: `ping rejected — pings on the ${row.tier} tier must be at least ${limit.minIntervalSeconds}s apart`,
+          min_interval_seconds: limit.minIntervalSeconds,
+          retry_after_seconds: limit.minIntervalSeconds,
+        },
+        429
+      );
+    }
   }
 
   return c.json({ ok: true, status: 'up', check_id: row.id });

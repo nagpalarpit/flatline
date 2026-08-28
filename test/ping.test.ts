@@ -123,6 +123,32 @@ describe('GET/POST /ping/:id — tier interval floor', () => {
     const accepted = await request(`/ping/${id}`);
     expect(accepted.status).toBe(200);
   });
+
+  // Same check-then-act race class as the fixed /checks count race and the
+  // recovery-ping double-webhook race (see ping.test.ts's recovery describe
+  // block below) — here found in the "already up" ping path: the interval
+  // check reads last_ping_at and computes elapsed time in JS, then the write
+  // used to be unconditional. Fires 10 truly concurrent pings, each just
+  // outside the floor for the *previous* one, and asserts the floor was
+  // actually enforced under concurrency, not merely that most requests got a
+  // 200 (which would pass even if every single one raced through).
+  it('enforces the interval floor under truly concurrent pings, not just sequential ones', async () => {
+    const { apiKey } = await registerAccount();
+    await setAccountTier(apiKey, 'pro'); // 60s floor
+    const { body } = await createCheck(apiKey, { period_seconds: 60 });
+    const id = body.check!.id;
+
+    // last_ping_at is 61s ago — exactly one ping should clear the floor;
+    // any further concurrent ping racing against the same stale read must
+    // not also clear it.
+    await setCheckTimestamps(id, { last_ping_at: secondsAgoIso(61) });
+
+    const results = await Promise.all(Array.from({ length: 10 }, () => request(`/ping/${id}`)));
+    const accepted = results.filter(res => res.status === 200);
+    const rejected = results.filter(res => res.status === 429);
+    expect(accepted.length).toBe(1);
+    expect(rejected.length).toBe(9);
+  });
 });
 
 describe('GET/POST /ping/:id — recovery path', () => {
