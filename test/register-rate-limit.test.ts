@@ -2,7 +2,7 @@
 // atomic-batch pattern snapog uses (see migrations/0001_init.sql's
 // registration_attempts table and the guard clause at the top of
 // app.post('/register', ...) in src/index.ts), applied here from day one
-// by explicit design choice rather than retrofitted later.
+// per cfo-campbell's explicit recommendation rather than retrofitted later.
 import { describe, expect, it } from 'vitest';
 import { env, registerAccount, request } from './helpers';
 

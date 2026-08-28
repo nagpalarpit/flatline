@@ -6,8 +6,8 @@
 // overdue in a given minute — a function of real incidents — rather than by
 // inbound ping traffic, which is what let a single Business-tier customer's
 // legitimate max-volume usage threaten to flip to negative gross margin
-// (see the v1 implementation notes and
-// the unit-economics analysis).
+// (see docs/fullstack/2026-08-25-flatline-v1-implementation.md and
+// docs/cfo/2026-08-25-flatline-unit-economics.md).
 
 import type { Check, CheckStatus } from '../types';
 import { applyStatusChange } from './transition';
@@ -40,8 +40,10 @@ export async function runSweep(db: D1Database, now: Date = new Date()): Promise<
   const transitioned: SweepResult['transitioned'] = [];
 
   for (const check of overdue) {
-    await applyStatusChange(db, check, 'down', 'up', nowIso);
-    transitioned.push({ check: { ...check, status: 'down', last_state_change_at: nowIso }, toStatus: 'down' });
+    const won = await applyStatusChange(db, check, 'down', 'up', nowIso);
+    if (won) {
+      transitioned.push({ check: { ...check, status: 'down', last_state_change_at: nowIso }, toStatus: 'down' });
+    }
   }
 
   return { checked_at: nowIso, transitioned };

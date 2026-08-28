@@ -10,7 +10,8 @@ export interface TierLimit {
   /**
    * Minimum allowed seconds between two accepted pings on a single check,
    * and the minimum allowed `period_seconds` when creating/updating a check.
-   * This is the fix for the abuse/quota risk flagged during design review: pricing meters check *count*, but Cloudflare cost and
+   * This is the fix for the abuse/quota risk flagged by critic-munger and
+   * cfo-campbell: pricing meters check *count*, but Cloudflare cost and
    * request-quota exposure scale with ping *volume*. Capping the floor per
    * tier bounds worst-case volume regardless of how many checks an account
    * configures.

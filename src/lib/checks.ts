@@ -21,7 +21,7 @@ const MAX_WEBHOOK_URL_LENGTH = 2048;
 // explicitly NOT a defense against DNS rebinding (a hostname that resolves
 // to a private address only at request time, after passing this check as a
 // normal-looking public hostname). That's a real residual risk and is
-// intentionally out of scope for this pass; see the implementation notes for detail.
+// intentionally out of scope for this pass; see docs/fullstack for the note.
 //
 // Handy side effect of using the WHATWG URL parser upstream of this check:
 // it already canonicalizes IPv4 literals written in decimal/octal/hex form

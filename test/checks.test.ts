@@ -126,8 +126,8 @@ describe('POST /checks', () => {
     expect(body.error).toMatch(/limit/i);
   });
 
-  // Same race found and fixed for /register (see git history),
-  // reproduced against POST /checks: a plain SELECT COUNT(*)
+  // Same race qa-bach found and fixed for /register (commits d278978/
+  // f4d61df), reproduced against POST /checks: a plain SELECT COUNT(*)
   // followed by a separate INSERT lets concurrent requests all read the
   // same pre-insert count and all pass the guard. Mirrors
   // register-rate-limit.test.ts's "allows exactly N successes under truly

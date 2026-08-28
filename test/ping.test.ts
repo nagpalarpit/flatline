@@ -1,5 +1,5 @@
 // Ping ingestion + the tier-based interval-floor fix required by
-// an earlier design review: pricing meters check count,
+// critic-munger's and cfo-campbell's reviews: pricing meters check count,
 // but Cloudflare cost/abuse-potential scales with ping *volume*, so pings
 // arriving faster than the account's tier floor must be rejected before any
 // write happens (free: 300s, pro/business: 60s — see src/types.ts).
@@ -158,6 +158,47 @@ describe('GET/POST /ping/:id — recovery path', () => {
       .bind(id)
       .first<{ success: number }>();
     expect(delivery?.success).toBe(1);
+  });
+
+  // Same race class qa-bach found and fixed for /register and /checks (see
+  // checks.test.ts) — a check-then-act read followed by a separate write
+  // lets concurrent callers all read the pre-transition snapshot and all
+  // act on it. Here that would mean two check_events rows and two fired
+  // webhooks for one real down->up transition, which is exactly what a
+  // monitored service's own timeout-retry behavior would trigger in
+  // production (it resends the heartbeat it thinks failed).
+  it('flips a down check exactly once under truly concurrent recovery pings, not twice', async () => {
+    const origin = fetchMock.get('https://hooks.example.test');
+    origin.intercept({ path: '/alert', method: 'POST' }).reply(200, 'ok').times(10);
+
+    const { apiKey } = await registerAccount();
+    const { body } = await createCheck(apiKey, {
+      period_seconds: 300,
+      webhook_url: 'https://hooks.example.test/alert',
+    });
+    const id = body.check!.id;
+
+    await env.DB.prepare("UPDATE checks SET status = 'down' WHERE id = ?").bind(id).run();
+
+    // Fire 10 concurrent recovery pings for the same check — at most one
+    // should be recorded as the transition.
+    const results = await Promise.all(Array.from({ length: 10 }, () => request(`/ping/${id}`)));
+    expect(results.every(res => res.status === 200)).toBe(true);
+
+    const row = await env.DB.prepare('SELECT status FROM checks WHERE id = ?').bind(id).first<{ status: string }>();
+    expect(row?.status).toBe('up');
+
+    const eventCount = await env.DB
+      .prepare('SELECT COUNT(*) as cnt FROM check_events WHERE check_id = ?')
+      .bind(id)
+      .first<{ cnt: number }>();
+    expect(eventCount?.cnt).toBe(1);
+
+    const deliveryCount = await env.DB
+      .prepare('SELECT COUNT(*) as cnt FROM webhook_deliveries WHERE check_id = ?')
+      .bind(id)
+      .first<{ cnt: number }>();
+    expect(deliveryCount?.cnt).toBe(1);
   });
 
   it('a routine (non-recovery) ping never writes a check_events row', async () => {

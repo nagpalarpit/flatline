@@ -1,9 +1,9 @@
 // Flatline — outbound webhook alerting
 //
-// Deliberately webhook-only for v1 (see product scope notes): the customer
+// Deliberately webhook-only for v1 (see CEO decision doc): the customer
 // supplies their own endpoint, so there is zero new third-party credential
 // dependency to provision. Cloudflare does not bill outbound fetch/subrequest
-// calls, so this is $0 incremental cost per alert (confirmed by cost analysis
+// calls, so this is $0 incremental cost per alert (confirmed by cfo-campbell
 // against live Cloudflare pricing).
 
 import type { Check, CheckStatus } from '../types';

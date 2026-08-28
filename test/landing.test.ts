@@ -1,5 +1,5 @@
 // Coverage for GET / — the Carbon Terminal landing page shipped per
-// the landing page design notes. Snapog has no equivalent
+// docs/ui/2026-08-27-flatline-landing-direction.md. Snapog has no equivalent
 // dedicated landing-route test (its GET / was never covered either), so this
 // is a new file rather than a mirrored one.
 import { describe, expect, it } from 'vitest';

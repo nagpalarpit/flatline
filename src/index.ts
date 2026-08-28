@@ -78,9 +78,10 @@ app.get('/health', c => c.json({ ok: true, ts: new Date().toISOString() }));
 // ─── Registration ───────────────────────────────────────────────────────────
 
 app.post('/register', async c => {
-  // Same abuse-prevention pattern shipped for snapog: no email verification exists (that needs a credentialed
+  // Same abuse-prevention pattern shipped for snapog (commits d278978/
+  // f4d61df): no email verification exists (that needs a credentialed
   // transactional-email provider, which is out of scope for the same reason
-  // email alerting is — see product scope notes), so IP throttling is the only
+  // email alerting is — see CEO decision doc), so IP throttling is the only
   // thing stopping a script from minting unlimited free-tier accounts. The
   // atomic INSERT...SELECT...WHERE avoids the check-then-insert race that
   // required a follow-up fix on snapog; applied here from day one instead.
@@ -117,7 +118,7 @@ app.post('/register', async c => {
 
   // Self-serve signup only ever grants the free tier — Stripe billing wiring
   // is deliberately out of scope for this cycle (follows snapog's pattern
-  // later, per product scope notes).
+  // later, per CEO decision doc).
   const userId = crypto.randomUUID();
   await c.env.DB
     .prepare('INSERT INTO users (id, email) VALUES (?, ?) ON CONFLICT(email) DO NOTHING')
@@ -164,11 +165,11 @@ app.post('/checks', async c => {
   if (!parsed.ok) return c.json({ error: parsed.error }, 400);
 
   // Same atomic INSERT...SELECT...WHERE pattern as /register (commits
-  // see the /register comment above): a plain SELECT COUNT(*) followed
+  // d278978/f4d61df, see the comment there): a plain SELECT COUNT(*) followed
   // by a separate INSERT is a check-then-act race — concurrent requests all
   // read the same pre-insert count and all pass the guard, so the account can
   // blow past maxChecks under bursty concurrent creation (verified by
-  // QA testing found: 10 concurrent POSTs at the 24/25 boundary all succeeded,
+  // qa-bach: 10 concurrent POSTs at the 24/25 boundary all succeeded,
   // landing the account at 34 active checks against a cap of 25). Folding
   // the count check into the INSERT's WHERE clause makes the read-then-write
   // a single atomic D1 statement instead of two round-trips with a gap

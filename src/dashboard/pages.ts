@@ -1,7 +1,7 @@
 // Flatline — Dashboard & landing page HTML
 // Aesthetic: "Carbon Terminal" — same dark developer-tool system as SnapOG
 // (src/dashboard/pages.ts in projects/snapog), reused verbatim per
-// the landing page design notes. Two deliberate additions
+// docs/ui/2026-08-27-flatline-landing-direction.md. Two deliberate additions
 // live in this file: `.heartbeat-wrap` (hero visual) and `.step-card` /
 // `.walkthrough` (zero-signup alert section) — everything else is the same
 // tokens, same class names, same structure as SnapOG's landingPage().

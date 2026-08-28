@@ -14,4 +14,4 @@ describe('GET /health', () => {
 
 // GET / now serves the HTML landing page (see test/landing.test.ts) rather
 // than a JSON info payload — moved there when the Carbon Terminal landing
-// page shipped per the landing page design notes.
+// page shipped per docs/ui/2026-08-27-flatline-landing-direction.md.
