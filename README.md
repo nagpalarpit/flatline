@@ -5,6 +5,7 @@ A dead man's switch for cron jobs and scheduled tasks. Ping it after every run; 
 [![CI](https://github.com/nagpalarpit/flatline/actions/workflows/ci.yml/badge.svg)](https://github.com/nagpalarpit/flatline/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/nagpalarpit/flatline)](https://github.com/nagpalarpit/flatline/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=nagpalarpit.flatline)
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/nagpalarpit/flatline)
 
