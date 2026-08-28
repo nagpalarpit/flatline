@@ -1,6 +1,6 @@
 {
   "name": "flatline",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Dead man's switch for cron jobs \u2014 ping after every scheduled run, get alerted the moment it stops. Hosted on Cloudflare Workers.",
   "scripts": {
     "dev": "wrangler dev",
