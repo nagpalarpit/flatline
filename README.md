@@ -106,18 +106,18 @@ npm run typecheck
 
 ## Deployment
 
-The one-click button above handles this for you. To deploy manually instead:
+The one-click button above handles this for you — it provisions the D1
+database and applies migrations before deploying. To deploy manually
+instead:
 
 ```bash
 # 1. Create remote D1 database
 wrangler d1 create flatline-db
 # Update wrangler.toml with the database_id
 
-# 2. Apply migrations to remote
-npm run db:remote
-
-# 3. Deploy (this also registers the cron trigger that sweeps for overdue checks)
-wrangler deploy
+# 2. Deploy — this also applies migrations to the remote database and
+# registers the cron trigger that sweeps for overdue checks
+npm run deploy
 ```
 
 ## Tech Stack
