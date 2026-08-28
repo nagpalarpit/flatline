@@ -225,6 +225,7 @@ app.post('/checks', async c => {
     created_at: nowIso,
     updated_at: nowIso,
     deleted_at: null,
+    version: 1,
   };
 
   return c.json({ check: checkResponse(check, host) }, 201);
@@ -285,16 +286,34 @@ app.patch('/checks/:id', async c => {
   });
   if (!parsed.ok) return c.json({ error: parsed.error }, 400);
 
+  // Optimistic concurrency: two concurrent PATCHes to different fields of
+  // the same check would otherwise both merge against this same `existing`
+  // snapshot, and whichever UPDATE lands second silently overwrites the
+  // first request's change (a lost update). Gating the UPDATE on the
+  // `version` read alongside `existing` means a losing request's WHERE
+  // clause matches zero rows instead of clobbering the winner.
   const nowIso = sqliteNow();
-  await c.env.DB
+  const result = await c.env.DB
     .prepare(
-      `UPDATE checks SET name = ?, period_seconds = ?, grace_seconds = ?, webhook_url = ?, updated_at = ? WHERE id = ?`
+      `UPDATE checks SET name = ?, period_seconds = ?, grace_seconds = ?, webhook_url = ?, updated_at = ?, version = version + 1
+       WHERE id = ? AND version = ?`
     )
-    .bind(parsed.value.name, parsed.value.period_seconds, parsed.value.grace_seconds, parsed.value.webhook_url, nowIso, existing.id)
+    .bind(
+      parsed.value.name,
+      parsed.value.period_seconds,
+      parsed.value.grace_seconds,
+      parsed.value.webhook_url,
+      nowIso,
+      existing.id,
+      existing.version
+    )
     .run();
+  if (result.meta.changes === 0) {
+    return c.json({ error: 'check was modified concurrently, please retry' }, 409);
+  }
 
   const host = new URL(c.req.url).host;
-  const updated: Check = { ...existing, ...parsed.value, updated_at: nowIso };
+  const updated: Check = { ...existing, ...parsed.value, updated_at: nowIso, version: existing.version + 1 };
   return c.json({ check: checkResponse(updated, host) });
 });
 

@@ -60,6 +60,7 @@ export interface Check {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  version: number;
 }
 
 export interface CheckEvent {

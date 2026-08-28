@@ -240,6 +240,45 @@ describe('PATCH /checks/:id', () => {
     const refetched = await get.json<{ check: { webhook_url: string | null } }>();
     expect(refetched.check.webhook_url).toBeNull();
   });
+
+  // A plain SELECT-then-merge-then-UPDATE-all-columns PATCH lets two
+  // concurrent requests each merge their partial input against the same
+  // stale snapshot; whichever UPDATE lands second silently overwrites the
+  // first request's field change. Two concurrent PATCHes here touch
+  // different fields (name vs. webhook_url) of the same check — exactly one
+  // should succeed, the other should be rejected as a conflict rather than
+  // being applied and then invisibly lost.
+  it('does not lose a concurrent PATCH to a different field of the same check', async () => {
+    const { apiKey } = await registerAccount();
+    const { body } = await createCheck(apiKey, { name: 'Original', period_seconds: 300 });
+    const id = body.check!.id;
+
+    const patchName = () =>
+      request(`/checks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ name: 'Renamed' }),
+      });
+    const patchWebhook = () =>
+      request(`/checks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ webhook_url: 'https://hooks.example.com/alert' }),
+      });
+
+    const [resA, resB] = await Promise.all([patchName(), patchWebhook()]);
+    const succeeded = [resA, resB].filter(r => r.status === 200);
+    const conflicted = [resA, resB].filter(r => r.status === 409);
+    expect(succeeded.length).toBe(1);
+    expect(conflicted.length).toBe(1);
+
+    // Whichever request won, its field change must be visible — not lost
+    // underneath the other request's stale merge.
+    const get = await request(`/checks/${id}`, { headers: { Authorization: `Bearer ${apiKey}` } });
+    const finalCheck = await get.json<{ check: { name: string; webhook_url: string | null } }>();
+    const won = (await succeeded[0].json()) as { check: { name: string; webhook_url: string | null } };
+    expect(finalCheck.check).toEqual(won.check);
+  });
 });
 
 describe('DELETE /checks/:id', () => {
