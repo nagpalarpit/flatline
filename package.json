@@ -4,7 +4,7 @@
   "description": "Dead man's switch for cron jobs \u2014 ping after every scheduled run, get alerted the moment it stops. Hosted on Cloudflare Workers.",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy && wrangler d1 migrations apply flatline-db --remote",
+    "deploy": "wrangler d1 migrations apply flatline-db --remote && wrangler deploy",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
